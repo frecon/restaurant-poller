@@ -1,11 +1,11 @@
 import { checkAvailability } from "./scraper";
 import { getNotifiedDates, filterNewAvailability, markDatesNotified } from "./state";
 import { notify } from "./notifications";
-import { config } from "./config";
+import { discoveryMode } from "./config";
 
 async function main() {
   console.log(
-    `[${new Date().toISOString()}] Restaurant poller starting...${config.discoveryMode ? " (DISCOVERY MODE)" : ""}`
+    `[${new Date().toISOString()}] Restaurant poller starting...${discoveryMode ? " (DISCOVERY MODE)" : ""}`
   );
 
   // Step 1: Scrape availability
@@ -17,14 +17,14 @@ async function main() {
     return;
   }
 
-  if (config.discoveryMode) {
-    console.log("Discovery mode — skipping notifications and Firestore.");
+  if (discoveryMode) {
+    console.log("Discovery mode — skipping notifications.");
     console.log("Results:", JSON.stringify(allSlots, null, 2));
     return;
   }
 
-  // Step 2: Dedup against Firestore
-  const notifiedDates = await getNotifiedDates();
+  // Step 2: Dedup against notified-dates.json
+  const notifiedDates = getNotifiedDates();
   const newSlots = filterNewAvailability(allSlots, notifiedDates);
 
   if (newSlots.length === 0) {
@@ -43,7 +43,7 @@ async function main() {
   await notify(newSlots);
 
   // Step 4: Mark as notified
-  await markDatesNotified(newSlots);
+  markDatesNotified(newSlots);
 
   console.log("Done.");
 }

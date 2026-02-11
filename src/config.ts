@@ -13,18 +13,12 @@ function requireEnv(name: string): string {
   return value;
 }
 
-function optionalEnv(name: string, fallback: string): string {
-  return process.env[name] || fallback;
-}
-
-// Lazily loaded — only accessed when notifications/Firestore are needed
+// Lazily loaded — only accessed when sending notifications
 let _config: {
   twilio: { accountSid: string; authToken: string; fromNumber: string };
   smtp: { user: string; pass: string };
   notifyPhone: string;
   notifyEmail: string;
-  gcpProjectId: string;
-  discoveryMode: boolean;
 } | null = null;
 
 export function getConfig() {
@@ -41,17 +35,14 @@ export function getConfig() {
       },
       notifyPhone: requireEnv("NOTIFY_PHONE"),
       notifyEmail: requireEnv("NOTIFY_EMAIL"),
-      gcpProjectId: optionalEnv("GCP_PROJECT_ID", ""),
-      discoveryMode,
     };
   }
   return _config;
 }
 
-// Re-export as `config` but with a getter so discovery mode works without all env vars
+// Proxy so discovery mode works without notification env vars
 export const config = new Proxy({} as ReturnType<typeof getConfig>, {
   get(_target, prop: string) {
-    if (prop === "discoveryMode") return discoveryMode;
     return getConfig()[prop as keyof ReturnType<typeof getConfig>];
   },
 });
