@@ -16,6 +16,11 @@ async function main() {
     return;
   }
 
+  if (allSlots.length === 0) {
+    console.log("No availability found. Done.");
+    return;
+  }
+
   await notify(allSlots);
   console.log("Done.");
 }
