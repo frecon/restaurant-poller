@@ -37,4 +37,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add notified-dates.json
-          git diff --cached --quiet || git commit -m "Update notified dates" && git push
+          if ! git diff --cached --quiet; then
+            git commit -m "Update notified dates"
+            git pull --rebase
+            git push
+          fi
