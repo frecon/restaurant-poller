@@ -49,6 +49,3 @@ DISCOVERY_MODE=true npx tsx src/index.ts
 npx tsx src/index.ts
 ```
 
-## Cost
-
-$0. GitHub Actions is free for public repositories. Twilio costs ~$2/month (phone number + SMS).
