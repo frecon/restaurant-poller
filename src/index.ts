@@ -12,38 +12,23 @@ async function main() {
   const allSlots = await checkAvailability();
   console.log(`Scraper found availability on ${allSlots.length} date(s)`);
 
-  if (allSlots.length === 0) {
-    console.log("No availability found. Done.");
-    return;
-  }
-
   if (discoveryMode) {
     console.log("Discovery mode — skipping notifications.");
     console.log("Results:", JSON.stringify(allSlots, null, 2));
     return;
   }
 
-  // Step 2: Dedup against notified-dates.json
-  const notifiedDates = getNotifiedDates();
-  const newSlots = filterNewAvailability(allSlots, notifiedDates);
+  // Step 2: Always notify with current status
+  await notify(allSlots);
 
-  if (newSlots.length === 0) {
-    console.log("All available dates already notified. Done.");
-    return;
+  // Step 3: If new availability, mark as notified for dedup
+  if (allSlots.length > 0) {
+    const notifiedDates = getNotifiedDates();
+    const newSlots = filterNewAvailability(allSlots, notifiedDates);
+    if (newSlots.length > 0) {
+      markDatesNotified(newSlots);
+    }
   }
-
-  console.log(`${newSlots.length} new date(s) with availability:`);
-  for (const slot of newSlots) {
-    console.log(
-      `  ${slot.date}: ${slot.timeSlots.map((s) => s.time).join(", ")}`
-    );
-  }
-
-  // Step 3: Notify
-  await notify(newSlots);
-
-  // Step 4: Mark as notified
-  markDatesNotified(newSlots);
 
   console.log("Done.");
 }

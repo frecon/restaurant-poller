@@ -1,9 +1,16 @@
 import twilio from "twilio";
 import nodemailer from "nodemailer";
-import { config, PARENT_URL } from "./config";
+import { config, PARENT_URL, GUEST_COUNT } from "./config";
 import type { DateAvailability } from "./scraper";
 
 function formatSmsBody(results: DateAvailability[]): string {
+  if (results.length === 0) {
+    return [
+      `Åre Nature Studio — inga lediga bord`,
+      `Kollade alla datum för ${GUEST_COUNT} gäster, inget ledigt.`,
+    ].join("\n");
+  }
+
   const lines = results.map((r) => {
     const times = r.timeSlots.map((s) => s.time).join(", ");
     return `${r.date}: ${times}`;
@@ -19,6 +26,14 @@ function formatSmsBody(results: DateAvailability[]): string {
 }
 
 function formatEmailHtml(results: DateAvailability[]): string {
+  if (results.length === 0) {
+    return `
+      <h2>Åre Nature Studio — Inga lediga bord</h2>
+      <p>Kollade alla datum för ${GUEST_COUNT} gäster — inget ledigt just nu.</p>
+      <p><a href="${PARENT_URL}">Kolla själv →</a></p>
+    `;
+  }
+
   const rows = results
     .map((r) => {
       const times = r.timeSlots.map((s) => s.time).join(", ");
@@ -28,7 +43,7 @@ function formatEmailHtml(results: DateAvailability[]): string {
 
   return `
     <h2>Åre Nature Studio — Bord ledigt!</h2>
-    <p>Nya lediga tider hittades för 5 gäster:</p>
+    <p>Nya lediga tider hittades för ${GUEST_COUNT} gäster:</p>
     <table style="border-collapse:collapse;margin:16px 0">
       <tr style="background:#f5f5f5">
         <th style="padding:8px;border:1px solid #ddd;text-align:left">Datum</th>
@@ -62,10 +77,14 @@ async function sendEmail(results: DateAvailability[]): Promise<void> {
     },
   });
 
+  const hasAvailability = results.length > 0;
+
   await transporter.sendMail({
     from: config.smtp.user,
     to: config.notifyEmail,
-    subject: `Åre Nature Studio — Bord ledigt! (${results.length} datum)`,
+    subject: hasAvailability
+      ? `Åre Nature Studio — Bord ledigt! (${results.length} datum)`
+      : `Åre Nature Studio — Inga lediga bord`,
     html: formatEmailHtml(results),
   });
 
