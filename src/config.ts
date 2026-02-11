@@ -1,4 +1,4 @@
-export const GUEST_COUNT = 5;
+export const GUEST_COUNT = 3;
 export const END_DATE = "2026-05-03";
 export const PARENT_URL = "https://www.arenaturestudio.com/matstudio#bord";
 export const BOOKING_BASE_URL = "https://book.easytable.com/book/";
